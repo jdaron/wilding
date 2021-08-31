@@ -1,0 +1,127 @@
+---
+title: "wilding_paper"
+author: "Josquin Daron"
+date: "9 juillet 2021"
+output: pdf_document
+urlcolor: blue
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Samples
+
+* **AG1000g phase 2: 1142 genomes and 16 populations**
+
+GNcol (4), GQgam (9), GHgam (12), FRgam (24), GNgam (40), KE (48), GHcol (55), GM (65), GAgam (69), Icol (71), BFcol (75), AOcol (78), GW (91), BFgam (92), UGgam (112), CMgam (297)
+
+* **Wilding genomes: 96 genomes and 3 populations**
+
+32 LVBdom (Libreville, Gabon domestic)  
+32 LPdom (La lope, Gabon domestic)  
+32 LPfor (La lope, Gabon forest)  
+
+* **Urbano genomes: 88 genomes and 3 populations**
+
+10 BZV (Brazzaville, Congo)  
+36 DLA (Douala, Cameroon)  
+42 LBV (Libreville, Gabon)  
+
+****
+
+# Dataset creation: reads mapping, SNP calling and filtering
+
+## Reads mapping
+
+* FASTQC report:
+- Urbano data: [fastqc report git hub link](https://github.com/jdaron/wilding/blob/master/fastqBamInfo/fastqInfo/anophele_coluzzi.urbano.multiqc_report.html "urbano_fastqc_report"). 
+
+* cutadapt:
+```{r cutadapt, eval=FALSE}
+cutadapt -a AGATCGGAAGAGCACACGTCTGAA -A AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGTAGATCTCGGTGGTCGCCGTATCATT  -q 30 -m 25 --max-n 0 -o $sampleId.R1.fastq.gz -p $sampleId.R2.fastq.gz /scratch/daron_anopheles/jesusdata/${sampleId}_1.fastq.gz /scratch/daron_anopheles/jesusdata/${sampleId}_2.fastq.gz  
+```
+
+* bwa mem:
+```{r bwa mem, eval=FALSE}
+
+header=$(zcat $sampleId.R1.fastq.gz | head -n 1)
+id=$(echo $header | head -n 1 | cut -f 1-4 -d":" | sed 's/@//' | sed 's/:/_/g')
+sm=$(echo $header | head -n 1 | grep -Eo "[ATGCN]+$")
+echo "Read Group @RG\tID:$id\tSM:$id"_"$sm\tLB:$id"_"$sm\tPL:ILLUMINA"
+
+bwa mem -t 1 Anopheles_gambiae.AgamP4.dna.chr.fna $sampleId.R1.fastq.gz $sampleId.R2.fastq.gz -R $(echo "@RG\tID:$id\tSM:$id"_"$sm\tLB:$id"_"$s
+m\tPL:ILLUMINA") | samtools view -F 4 -b - | samtools sort - -o $sampleId.map.sort.bam
+
+```
+
+* gatk realigner:
+```{r gatk realigner, eval=FALSE}
+java -jar ~/bioInf/bin/GenomeAnalysisTK-3.8-0-ge9d806836/GenomeAnalysisTK.jar -T RealignerTargetCreator -R Anopheles_gambiae.AgamP4.dna.chr.fna
+ -I $sampleId.map.sort.bam -o $sampleId.realignertargetcreator.intervals  
+
+java -Xmx8G -Djava.io.tmpdir=/tmp -jar ~/bioInf/bin/GenomeAnalysisTK-3.8-0-ge9d806836/GenomeAnalysisTK.jar -T IndelRealigner -R Anopheles_gambi
+ae.AgamP4.dna.chr.fna -targetIntervals $sampleId.realignertargetcreator.intervals -I $sampleId.map.sort.bam -o $sampleId.indelrealigner.bam
+```
+
+* bam file report (qualimap):
+
+```{r qualimap cmd, eval=FALSE}
+qualimap bamqc -bam /scratch/daron_anopheles/bam/$inputFile.indelrealigner.bam -c --java-mem-size=8G -outdir /data3/projects/plasmodium/anophel
+es/fastqBamInfo/bamInfo/jesus_qualimap/$inputFile.outqualimap -nt 2 -outformat HTML
+```
+
+1. wilding report:
+[qualimap report git hub link](https://github.com/jdaron/wilding/blob/master/fastqBamInfo/bamInfo/wilding.qualimap.bam_report.pdf "wilding_qualimap_report").
+
+2. urbano report: [qualimap report git hub link](https://github.com/jdaron/wilding/blob/master/fastqBamInfo/bamInfo/urbano.report.qualimap.multi-bamqc.pdf "jesus_qualimap_report").
+
+3. Genome mean coverage:
+
+\begin{center}
+\includegraphics[width=8in]{/home/daron/bioInf/wilding/github_wilding/fastqBamInfo/bamInfo/wilding_urbano_mean_coverage.pdf}
+\end{center}
+
+**--> Filtering individuals: Remove individuals with mean coverage lower than 14x**  
+  
+- 9 individuals from Wilding: LP69, LP243, LP697, LP1118, LP1125, LP1164, LP1165, LP1168, LP1285  
+  
+- 17 individuals from Urbano: DLA037p, DLA076p, DLA077p, DLA102p, DLA105p, DLA130p, DLA132p, DLA155Bp, LBV001p, LBV007p, LBV009p, LBV052p, LBV125p, LBV127p, LBV137p, LBV140p, LBV142p  
+
+4. Determining sex of each samples:
+
+\begin{center}
+\includegraphics[width=8in]{/home/daron/bioInf/wilding/github_wilding/fastqBamInfo/bamInfo/wilding_urbano.chr_coverageDepth.pdf}
+\end{center}
+
+- wilding: 16/96 Males
+- urbano: 36/88 Males
+
+## SNPs calling and filtering
+
+* gatk unifiedGenotyper:
+```{r gatk unifiedGenotyper, eval=FALSE}
+java -jar ~/bin/GenomeAnalysisTK-3.8-0-ge9d806836/GenomeAnalysisTK.jar -T UnifiedGenotyper -R Anopheles_gambiae.AgamP4.dna.chr.fna -I bamFile.l
+ist -L $interval --genotyping_mode DISCOVERY --downsampling_type BY_SAMPLE -dcov 250 --output_mode EMIT_VARIANTS_ONLY --min_base_quality_score 
+17 --genotype_likelihoods_model BOTH --heterozygosity 0.01 --indel_heterozygosity 0.001 -stand_call_conf 30.0 -contamination 0.05 -o anopheles-
+rose.$out.unifiedGenotyper.vcf
+
+```
+
+* SNP filtering:
+```{r vcf_stat, eval=FALSE}
+launch_ipynb.py -i vcfStats_slurm.ipynb -o wilding.chr3R.vcfStats_slurm.html
+```
+
+vcfStats_slurm.ipynb: [git hub link](http://example.com "Title").
+
+***  
+* Summary of filtering step:
+1. Remove individual with mean coverage lower than 14x.  
+
+***
+
+# Structure of genetic variation
+
+## Subsection
+### SubSubsection

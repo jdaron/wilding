@@ -1,0 +1,9 @@
+# add the change
+git add fastqBamInfo/
+
+# commit the change
+git commit -m "Adding new file in fastqBamInfo directory"
+
+# push change to git hub
+git push
+

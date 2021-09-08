@@ -2,7 +2,10 @@
 title: "wilding_paper"
 author: "Josquin Daron"
 date: "9 juillet 2021"
-output: pdf_document
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
 urlcolor: blue
 ---
 
@@ -10,7 +13,7 @@ urlcolor: blue
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-# Samples
+# 1. Samples
 
 * **AG1000g phase 2: 1142 genomes and 16 populations**
 
@@ -30,12 +33,16 @@ GNcol (4), GQgam (9), GHgam (12), FRgam (24), GNgam (40), KE (48), GHcol (55), G
 
 ****
 
-# Dataset creation: reads mapping, SNP calling and filtering
+# 2. Dataset creation: reads mapping, SNP calling and filtering
 
-## Reads mapping
+## 2.1 Reads mapping
+
+### 2.1.1 Bash script to perform: FASTQC, cutadapt, bwa mem, gatk realigner, bam report
 
 * FASTQC report:
-- Urbano data: [fastqc report git hub link](https://github.com/jdaron/wilding/blob/master/fastqBamInfo/fastqInfo/anophele_coluzzi.urbano.multiqc_report.html "urbano_fastqc_report"). 
+
+-> Wilding fastqc report: not available because we've got mapped reads.  
+-> Urbano fastqc report: [fastqc report git hub link](https://github.com/jdaron/wilding/blob/master/fastqBamInfo/fastqInfo/anophele_coluzzi.urbano.multiqc_report.html "urbano_fastqc_report"). 
 
 * cutadapt:
 ```{r cutadapt, eval=FALSE}
@@ -71,33 +78,37 @@ qualimap bamqc -bam /scratch/daron_anopheles/bam/$inputFile.indelrealigner.bam -
 es/fastqBamInfo/bamInfo/jesus_qualimap/$inputFile.outqualimap -nt 2 -outformat HTML
 ```
 
-1. wilding report:
+-> wilding bam report:
 [qualimap report git hub link](https://github.com/jdaron/wilding/blob/master/fastqBamInfo/bamInfo/wilding.qualimap.bam_report.pdf "wilding_qualimap_report").
 
-2. urbano report: [qualimap report git hub link](https://github.com/jdaron/wilding/blob/master/fastqBamInfo/bamInfo/urbano.report.qualimap.multi-bamqc.pdf "jesus_qualimap_report").
+-> urbano bam report: [qualimap report git hub link](https://github.com/jdaron/wilding/blob/master/fastqBamInfo/bamInfo/urbano.report.qualimap.multi-bamqc.pdf "jesus_qualimap_report").
 
-3. Genome mean coverage:
+### 2.1.2 Bam files analysis (genome depth, sex determination)
+
+* Genome mean coverage:
 
 \begin{center}
-\includegraphics[width=8in]{/home/daron/bioInf/wilding/github_wilding/fastqBamInfo/bamInfo/wilding_urbano_mean_coverage.pdf}
+\includegraphics[width=8in]{/home/daron/bioInf/wilding/github/wilding/fastqBamInfo/bamInfo/wilding_urbano_mean_coverage.pdf}
 \end{center}
 
 **--> Filtering individuals: Remove individuals with mean coverage lower than 14x**  
   
-- 9 individuals from Wilding: LP69, LP243, LP697, LP1118, LP1125, LP1164, LP1165, LP1168, LP1285  
+9 individuals from Wilding: LP69, LP243, LP697, LP1118, LP1125, LP1164, LP1165, LP1168, LP1285  
   
-- 17 individuals from Urbano: DLA037p, DLA076p, DLA077p, DLA102p, DLA105p, DLA130p, DLA132p, DLA155Bp, LBV001p, LBV007p, LBV009p, LBV052p, LBV125p, LBV127p, LBV137p, LBV140p, LBV142p  
+17 individuals from Urbano: DLA037p, DLA076p, DLA077p, DLA102p, DLA105p, DLA130p, DLA132p, DLA155Bp, LBV001p, LBV007p, LBV009p, LBV052p, LBV125p, LBV127p, LBV137p, LBV140p, LBV142p  
 
-4. Determining sex of each samples:
+* Determining sex of each samples:
 
 \begin{center}
-\includegraphics[width=8in]{/home/daron/bioInf/wilding/github_wilding/fastqBamInfo/bamInfo/wilding_urbano.chr_coverageDepth.pdf}
+\includegraphics[width=8in]{/home/daron/bioInf/wilding/github/wilding/fastqBamInfo/bamInfo/wilding_urbano.chr_coverageDepth.pdf}
 \end{center}
 
-- wilding: 16/96 Males
-- urbano: 36/88 Males
+wilding: 16/96 Males
+urbano: 36/88 Males
 
-## SNPs calling and filtering
+## 2.2 SNPs calling and filtering
+
+### 2.2.1 SNPs calling script
 
 * gatk unifiedGenotyper:
 ```{r gatk unifiedGenotyper, eval=FALSE}
@@ -108,20 +119,378 @@ rose.$out.unifiedGenotyper.vcf
 
 ```
 
-* SNP filtering:
+### 2.2.2 SNP filtering:
+
+* Jupyter-notebook script to generate html report on the newly created VCF file: [Jupyter notebook VCF stat report code](https://github.com/jdaron/wilding/blob/main/snpCalling/vcfStats_slurm.ipynb). 
+
 ```{r vcf_stat, eval=FALSE}
 launch_ipynb.py -i vcfStats_slurm.ipynb -o wilding.chr3R.vcfStats_slurm.html
 ```
 
-vcfStats_slurm.ipynb: [git hub link](http://example.com "Title").
+-> Wilding samples only SNPs stat report: [Wilding SNP stat report](https://github.com/jdaron/wilding/tree/main/snpCalling/wilding "Wilding SNP stat report").
+
+Final number of SNPs per chr:  
+2L 1,228,916  
+2R 1,605,477  
+3L 1,159,765  
+3R 1,610,164  
+X 295,618  
+
+9 inds removed because imiss > 10%: LP1120 LP1134 LP1283 LP255 LP51 LP53 LP65 LP934 LP937
+
+-> Wilding and Urbano samples SNPs stat report: [Wilding & Urbano SNP stat report](https://github.com/jdaron/wilding/tree/main/snpCalling/wilding_urbano "Wilding & Urbano SNP stat report").
+
+Final number of SNPs per chr  
+2L 2,723,196  
+2R 3,485,073  
+3L 2,540,839  
+3R 3,524,803  
+X 639,905  
+
+4 inds removed because imiss > 10%: LP1124 LP1145 LP47 LP63  
+/!\ for X chr 10 samples are removed: BZV093bu DLA136u DLA137u LBV066u LBV072u LBV131u LP1124w LP1145w LP47w LP63w  
+
+* Bash script to perform SNP and ind filtering (cause scikit is only outputing stats)
+```{r filter_SNP_ind, eval=FALSE}
+#!/bin/bash
+
+# input file list
+IN_VCF=$1         # input VCF file
+AG_VCF_ACCESS=$2  # AG1000G VCF for genome accessibility, downloaded at ftp://ngs.sanger.ac.uk/production/ag1000g/phase2/AR1/accessibility/acce
+ssibility.X.vcf.gz
+REF=$3
+IND=$4
+
+IN_PREFIX=`echo $IN_VCF | sed 's,\(.*\).vcf.gz,\1,'`
+
+# Step 1: Select variants using GATK 
+echo "--> Step 1: Select variant based on GATK metrics `date`"
+echo "Filter Expression QD < 5.00 || FS > 60.000 || ReadPosRankSum < -8.000"
+
+java -jar ~/bioInf/bin/GenomeAnalysisTK-3.8-0-ge9d806836/GenomeAnalysisTK.jar -T SelectVariants -R $REF -V $IN_VCF -o $IN_PREFIX.snponly.vcf.gz
+ -selectType SNP
+
+tabix $IN_PREFIX.snponly.vcf.gz
+
+java -jar ~/bioInf/bin/GenomeAnalysisTK-3.8-0-ge9d806836/GenomeAnalysisTK.jar -T VariantFiltration -R $REF -V $IN_PREFIX.snponly.vcf.gz -o $IN_
+PREFIX.annot.vcf.gz --filterExpression "QD < 5.00 || FS > 60.000 || ReadPosRankSum < -8.000 " --filterName LOW_QUAL
+
+zcat $IN_PREFIX.annot.vcf.gz | egrep -v "LOW_QUAL" | bgzip > $IN_PREFIX.passQC.vcf.gz
+
+# Step 2: Select variants from inputed VCF based on genome accessibility
+echo "--> Step 2: Choose variant based on genome accessibility `date`"
+echo "minGQ 20 min DP 10"
+
+zcat $AG_VCF_ACCESS | awk '{if($7=="PASS"){print $1"\t"$2}}' > $IN_PREFIX.pos
+
+vcftools --gzvcf $IN_PREFIX.passQC.vcf.gz --positions $IN_PREFIX.pos --minGQ 20 --non-ref-ac-any 1 --recode-INFO-all --recode --stdout | bgzip 
+> $IN_PREFIX.snpPassQC.vcf.gz
+
+rm $IN_PREFIX.annot.vcf.gz $IN_PREFIX.snponly.vcf.gz $IN_PREFIX.passQC.vcf.gz
+
+vcftools --gzvcf $IN_PREFIX.snpPassQC.vcf.gz --missing-site --stdout | awk '{if($6<0.05){print $0}}' | cut -f 1,2 > $IN_PREFIX.lmiss
+
+vcftools --gzvcf $IN_PREFIX.snpPassQC.vcf.gz --positions $IN_PREFIX.lmiss --remove $IND --non-ref-ac-any 1 --recode-INFO-all --recode --stdout 
+| bgzip > $IN_PREFIX.passQC.vcf.gz
+
+rm $IN_PREFIX.snpPassQC.vcf.gz
+
+```
 
 ***  
 * Summary of filtering step:
-1. Remove individual with mean coverage lower than 14x.  
-
+1. Remove individual with mean coverage lower than 14x
+2. Discard SNPs present in none accessible area (defined in ag1000g), QD < 5.00, FS > 60.000 and ReadPosRankSum < -8.000
+3. Replace by NA genotypes with low call confidence (GQ<20)
+4. Remove SNPs with >5% lmiss
+5. Remove Inds with >10% imiss  
 ***
 
-# Structure of genetic variation
+# 3. Structure of genetic variation
 
-## Subsection
-### SubSubsection
+## Global genetic structure
+### IBD anlaysis to identify closely related samples 
+
+_Context: Downstream analysis required the absence of high related samples (i.e. more than we would expect by chance in a random sample)._
+_Goal: Identify putative closely related pair of sample using plink --genome _
+
+Bellow is the script for the IBD analysis: 
+```{r ibdplink, eval=FALSE}
+# 1. Prune VCF using customized script. The program output the list of the coordinate of unlinked SNPs
+prune_SNPs.py --snp wilding_urbano.3L.unifiedGenotyper.cov14x.passQC.vcf.gz --pop all --meta wilding_urbano.meta.txt -l 3L:15000000-41000000 > wilding_urbano.3L.pruned.pos 
+
+prune_SNPs.py --snp wilding_urbano.3R.unifiedGenotyper.cov14x.passQC.vcf.gz --pop all --meta wilding_urbano.meta.txt -l 3R:1000000-37000000 > wilding_urbano.3R.pruned.pos
+
+# 2. Fetch pruned SNPs using VCFtools
+vcftools --gzvcf wilding_urbano.3L.unifiedGenotyper.cov14x.passQC.vcf.gz --positions wilding_urbano.3L.pruned.pos
+ --recode --stdout | bgzip > wilding_urbano.3L.pruned.vcf.gz
+
+vcftools --gzvcf wilding_urbano.3R.unifiedGenotyper.cov14x.passQC.vcf.gz --positions wilding_urbano.3R.pruned.pos
+ --recode --stdout | bgzip > wilding_urbano.3R.pruned.vcf.gz
+
+vcf-concat wilding_urbano.3L.unifiedGenotyper.cov14x.passQC.vcf.gz wilding_urbano.3R.unifiedGenotyper.cov14x.passQC.vcf.gz | bgzip > wilding_urbano.3.pruned.vcf.gz
+
+# 3. IBD with plink --genome
+plink --vcf wilding_urbano.3.pruned.vcf.gz --allow-extra-chr --genome --out wilding_urbano.chr3.ibd
+```
+
+1. AG1000g
+\begin{center}
+\includegraphics[width=8in]{/home/daron/bioInf/wilding/github/wilding/popstructure/ibd_plink/ag1000g.ibd.pdf}
+\end{center}
+
+2. Wilding
+\begin{center}
+\includegraphics[width=8in]{/home/daron/bioInf/wilding/github/wilding/popstructure/ibd_plink/wilding.ibd.pdf}
+\end{center}
+
+3. Wilding & Urbano
+\begin{center}
+\includegraphics[width=8in]{/home/daron/bioInf/wilding/github/wilding/popstructure/ibd_plink/wilding_urbano.ibd.pdf}
+\end{center}
+
+- Conclusion: Most sample pairs have low IBD value, meaning they are not related.
+
+### PCA
+
+```{r pca, eval=FALSE}
+# PCA analysis was made using the jupyter-notebook script pca.ipynb
+```
+
+_Question: How does the genetics variation of wilding/urbano samples is structured alone, or within the AG1000G samples?_
+
+1. AG1000G and Wilding
+\begin{center}
+\includegraphics[width=8in]{/home/daron/bioInf/wilding/github/wilding/popstructure/pca/ag1000g_phase2.wilding.merged.biallelic.3.pca.pdf}
+\end{center}
+
+2. Wilding
+\begin{center}
+\includegraphics[width=8in]{/home/daron/bioInf/wilding/github/wilding/popstructure/pca/wilding.biallelic.3.pca.pdf}
+\end{center}
+
+- Conclusion:
+1. Wilding genome are located between the AOcol and GHcol population, as expected. 
+2. Based on the wilding pca, we can distinguish clearly two pop: (i) LBVdom and (ii) LPdom-LPfor.  LPdom and LPfor even they have been samples at 15km away from each other they represent one single population
+
+### Admixture
+
+_Question: Same question than above adding the admixture component._
+
+* lauch admixture on the cluster, 1 job per k, 10 time a random set of 100kSNPs and 10 seed per samples set (N=100 per k):
+```{r admixture, eval=FALSE}
+path_to_tmp="/scratch/daron_$SLURM_JOB_ID"
+IN_PREFIX="ag1000g.phase2.anopheles-rose.merged.biallelic.3.pruned"
+K=${1}
+
+# download vcf file
+scp nas3:/data3/projects/plasmodium/anopheles/vcf_store/$IN_PREFIX.vcf.gz $path_to_tmp
+
+# run admixture 10 resamples of 100kSNPs with 10 different seed; N=100
+N=0
+for i in {1..10}; do
+	zcat $IN_PREFIX.vcf.gz | egrep -v "#" | cut -f 1,2 | shuf -n 100000 | sort -k 1n,1n -k 2n,2n > pos
+	vcftools --gzvcf $IN_PREFIX.vcf.gz --positions pos --stdout --recode | sed 's,^3L,1,' | sed 's,^3R,2,' | bgzip > samp.vcf.gz
+	tabix samp.vcf.gz
+	plink --vcf samp.vcf.gz --make-bed  --allow-extra-chr --out samp
+
+	for j in {1..10}; do
+		N=$(( $N + 1 ))
+		admixture --cv --seed=$RANDOM -j9 samp.bed $K | tee $IN_PREFIX.n$N.log${K}.out
+		mv samp.$K.P $IN_PREFIX.n$N.$K.P
+		mv samp.$K.Q $IN_PREFIX.n$N.$K.Q
+		scp $IN_PREFIX.n$N.$K.P $path_to_dir/
+		scp $IN_PREFIX.n$N.$K.Q $path_to_dir/
+		scp $IN_PREFIX.n$N.log${K}.out $path_to_dir/
+	done
+done
+```
+
+* reorder ind based on a customized order:
+```{r admixture_order_out_file, eval=FALSE}
+R --vanilla --args $PWD/'admixture output file' $PWD/'ind ordered as in the admix' $PWD/'ind new order' < orderAdmix.R
+```
+
+* run clumpack
+```{r clumpack, eval=FALSE}
+CLUMPAK.pl -id 10 -dir ./ -file out_ordered_ag1000gCol_wilding.zip -inputtype Admixture -indtopop ag1000gCol_wilding_label.txt
+
+option help: 
+-id Job id (defaut random number generated)
+-inputtype Input file format [Admixture|Structure]
+-indtopop population label (only pop name in the same order than input file)
+
+```
+
+
+
+### Stat descriptives
+
+* Pi and tajima D
+```{r pi_taj, eval=FALSE}
+popStatsDescWindows.py --snp anopheles-rose.unifiedGenotyper.cov14x.passQC.zarr --keep LPdom.ind --bed ag1000g.chr3pericentroRegion.bed --windows 20000
+
+```
+
+\begin{center}
+\includegraphics[width=8in]{/home/daron/bioInf/wilding/github/wilding/popstructure/statDesc/pi_tajima/wilding_ag1000g.pi.tajima.pdf}
+\end{center}
+
+* LDdecay
+
+```{r lddecay, eval=FALSE}
+ldDecay.ipynb
+```
+
+\begin{center}
+\includegraphics[width=8in]{/home/daron/bioInf/wilding/github/wilding/popstructure/statDesc/ldDecay/wilding_ag1000g.lddecay.pdf}
+\end{center}
+
+* Folde Site Frequency spetrum 
+
+```{r sfsfolded, eval=FALSE}
+sfs.py --zarr ag1000g.phase2.anopheles-rose.merged.biallelic.zarr --keep LPdom.ind --bed ag1000g.chr3pericentroRegion.bed --scaled -o LPdom.sfs_folded_scaled.txt
+```
+
+\begin{center}
+\includegraphics[width=8in]{/home/daron/bioInf/wilding/github/wilding/popstructure/statDesc/sfs/wilding_ag1000g.folded_sfs_scaled.pdf}
+\end{center}
+
+* IBD
+```{r IBDseq, eval=FALSE}
+egrep -w $pop wilding.samples.meta.txt | cut -f 1 > k
+
+vcftools --gzvcf anopheles-rose.3L.unifiedGenotyper.cov14x.passQC.vcf.gz --chr 3L --from-bp 15000000 --to-bp 41000000 --keep k  --non-ref-ac-any 1 --recode --stdout | bgzip > $pop.3L.vcf.gz
+
+vcftools --gzvcf anopheles-rose.3R.unifiedGenotyper.cov14x.passQC.vcf.gz --chr 3R --from-bp 1000000 --to-bp 37000000 --keep k  --non-ref-ac-any 1 --recode --stdout | bgzip > $pop.3R.vcf.gz
+
+java -Xmx8g -jar ~/bioInf/bin/ibdseq.r1206.jar gt=$pop.3L.vcf.gz out=$pop.ibdseq.3L
+java -Xmx8g -jar ~/bioInf/bin/ibdseq.r1206.jar gt=$pop.3R.vcf.gz out=$pop.ibdseq.3R
+```
+
+\begin{center}
+\includegraphics[width=8in]{/home/daron/bioInf/wilding/github/wilding/popstructure/statDesc/ibdseq/wilding_ag1000g.IBD_violin.pdf}
+\end{center}
+
+\begin{center}
+\includegraphics[width=8in]{/home/daron/bioInf/wilding/github/wilding/popstructure/statDesc/ibdseq/wilding_ag1000g.IBD_count_sum.pdf}
+\end{center}
+
+* roh
+```{r roh, eval=FALSE}
+get_roh.py --snp ag1000g.phase2.anopheles-rose.merged.biallelic.zarr --keep LPdom.ind --bed ag1000g.chr3pericentroRegion.bed --method mhmm -o LPdom
+```
+
+\begin{center}
+\includegraphics[width=8in]{/home/daron/bioInf/wilding/github/wilding/popstructure/statDesc/roh/wilding_ag1000g.countroh_froh.pdf}
+\end{center}
+
+## Deomgraphic history:
+Investigate recent changes in population size over time.
+
+### IBDne
+Context: IBDne infer recent population history (last 500 generation). Based on the population structure we observed, with two distinct population, one in LBVdom et one in LPdom et LPfor, looking at recent demographic change in each sample group is the most likely way to observe differences.
+Question: Does LPdom et LPfor have exhibit recent demography changes ?
+
+```{r ibdne, eval=FALSE}
+cat $pop.ibdseq.3*.ibd | java -jar ibdne.04Sep15.e78.jar map=ag.chr3.map out=$pop.3.ne nthreads=7 minibd=0.1 filtersamples=false nboots=80
+```
+
+Recombination map can be find here: [AG1000G recombination map](ftp://ngs.sanger.ac.uk/production/ag1000g/phase1/AR3.1/recombination_maps/).
+
+\begin{center}
+\includegraphics[width=8in]{/home/daron/bioInf/wilding/github/wilding/popstructure/demo_history/ibdne/wilding.allchr.severalNbInd.ibd.pdf}
+\end{center}
+
+IBDne was run with 3 samples size:
+-allind = all the ind of each pop  
+-20ind = the same number of ind accross populations N=20  
+- 13ind = considering only individual collected during the mission Nov-16 N=13
+
+### Stairway plot
+
+a. SNP polarization
+In order to generate a unfolded site frequency spetrum we need to polarize the SNPs using an outgroup.  
+Here we used A. merus as outgroup with N=10 individuals.
+
+```{r polarize, eval=FALSE}
+### merge wilding VCF with merus VCF
+join -1 1 -2 1 anopheles-rose.$chr.unifiedGenotyper.cov14x.passQC.pos chri_meru.merged.pos | sed 's,_,\t,' | sort -k 2n,2n > pos
+
+bcftools merge -i - -m snps anopheles-rose.$chr.unifiedGenotyper.cov14x.passQC.vcf.gz chri_meru.merged.vcf.gz | vcftools --gzvcf - --positions pos --stdout --recode | bcftools annotate -x ^FORMAT/GT | bgzip > anopheles-rose.$chr.unifiedGenotyper.cov14x.passQC.merge.vcf.gz
+
+### polarize REF allele using outgroup
+# samll header printing issue in the polarizeVCF.py scrit so header need to be adding separatly
+# use major allel as ancestral allel, discar 0.5:0.5 SNPs, site need a MAF of 0.1 to be considered
+polarizeVCF.py --vcf anopheles-rose.$chr.unifiedGenotyper.cov14x.passQC.merge.vcf.gz --keep chri_meru.id.txt --miss 0 --minFreq 0.1 | cat header - | bgzip > anopheles-rose.$chr.unifiedGenotyper.cov14x.passQC.merge.pol.vcf.gz
+
+
+sfs.py --zarr ag1000g.phase2.anopheles-rose.merged.biallelic.zarr --keep LPdom.ind --bed ag1000g.chr3pericentroRegion.bed --unfolded -o LPdom.usfs.txt
+
+```
+
+\begin{center}
+\includegraphics[width=8in]{/home/daron/bioInf/wilding/github/wilding/popstructure/usfs/wilding_ag1000.usfs.pdf}
+\end{center}
+
+b. Population differenciation using join usfs.
+
+```{r jsfs, eval=FALSE}
+sfs.py --zarr ag1000g.phase2.anopheles-rose.merged.biallelic.zarr --keep LPdom.ind --keep2 LPfor.ind --bed ag1000g.chr3pericentroRegion.bed -o LPdom_LPfor.jsfs
+```
+
+\begin{center}
+\includegraphics[width=8in]{/home/daron/bioInf/wilding/github/wilding/popstructure/popdifferenciation/jsfs/wilding.jsfs.pdf}
+\end{center}
+
+c. Stairway plot
+```{r stairwayplot2, eval=FALSE}
+pop=${1}
+inputSFS=${2}
+sfs=$(cat /data3/projects/plasmodium/anopheles/popstructure/statDesc/usfs/$inputSFS | cut -f 3 | sed '1d' | sed '$d' | sed '1d' | tr "\n" " ")
+nbseq=$(cat /data3/projects/plasmodium/anopheles/popstructure/statDesc/usfs/$inputSFS | cut -f 3 | sed '1d' | sed '$d' | sed '1d' | wc -l | awk
+ '{print $1+1}')
+nbSite=30484401
+nrand_1=$(( ($nbseq-2)/4 ))
+nrand_2=$(( ($nbseq-2)/2 ))
+nrand_3=$(( (($nbseq-2)*3)/4 ))
+nrand_4=$(($nbseq-2))
+
+### create blueprint file
+echo "popid: $pop # id of the population (no white space)" > run.blueprint
+echo "nseq: $nbseq # number of sequences" >> run.blueprint
+echo "L: $nbSite # total number of observed nucleic sites, including polymorphic and monomorphic"  >> run.blueprint
+echo "whether_folded: false # whethr the SFS is folded (true or false)" >> run.blueprint
+echo "SFS: $sfs # snp frequency spectrum: number of singleton, number of doubleton, etc. (separated by white space)" >> run.blueprint
+echo "#smallest_size_of_SFS_bin_used_for_estimation: 1 # default is 1; to ignore singletons, uncomment this line and change this number to 2" >
+> run.blueprint
+echo "#largest_size_of_SFS_bin_used_for_estimation: 29 # default is n-1; to ignore singletons, uncomment this line and change this number to ns
+eq-2" >> run.blueprint
+echo "nrand: $nrand_1	$nrand_2	$nrand_3	$nrand_4 # number of random break points for each try (separated by white space)" >> ru
+n.blueprint
+echo "project_dir: $pop # project directory" >> run.blueprint
+echo "stairway_plot_dir: /home/daron/bioInf/bin/stairway_plot_v2.1.1/stairway_plot_es # directory to the stairway plot files" >> run.blueprint
+echo "ninput: 200 # number of input files to be created for each estimation" >> run.blueprint
+echo "#random_seed: $RANDOM" >> run.blueprint
+echo "#output setting" >> run.blueprint
+echo "mu: 2.8e-9 # assumed mutation rate per site per generation" >> run.blueprint
+echo "year_per_generation: 11 # assumed generation time (in years)" >> run.blueprint
+echo "#plot setting" >> run.blueprint
+echo "plot_title: $pop.plot # title of the plot" >> run.blueprint
+echo "xrange: 0.1,10000 # Time (1k year) range; format: xmin,xmax; "0,0" for default" >> run.blueprint
+echo "yrange: 0,0 # Ne (1k individual) range; format: xmin,xmax; "0,0" for default" >> run.blueprint
+echo "xspacing: 2 # X axis spacing" >> run.blueprint
+echo "yspacing: 2 # Y axis spacing" >> run.blueprint
+echo "fontsize: 12 # Font size" >> run.blueprint
+
+### Run stairwayplot2 
+java -cp /home/daron/bioInf/bin/stairway_plot_v2.1.1/stairway_plot_es Stairbuilder run.blueprint
+bash run.blueprint.sh
+
+```
+
+\begin{center}
+\includegraphics[width=8in]{/home/daron/bioInf/wilding/github/wilding/popstructure/demo_history/stairwayplot2/wilding_ag1000g.plot.final.summary.pdf}
+\end{center}
+
+### MSMC

@@ -17,7 +17,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 * **AG1000g phase 2: 1142 genomes and 16 populations**
 
-GNcol (4), GQgam (9), GHgam (12), FRgam (24), GNgam (40), KE (48), GHcol (55), GM (65), GAgam (69), Icol (71), BFcol (75), AOcol (78), GW (91), BFgam (92), UGgam (112), CMgam (297)
+GNcol (4), GQgam (9), GHgam (12), FRgam (24), GNgam (40), KE (48), GHcol (55), GM (65), GAgam (69), CIcol (71), BFcol (75), AOcol (78), GW (91), BFgam (92), UGgam (112), CMgam (297)
 
 * **Wilding genomes: 96 genomes and 3 populations**
 
@@ -25,13 +25,8 @@ GNcol (4), GQgam (9), GHgam (12), FRgam (24), GNgam (40), KE (48), GHcol (55), G
 32 LPdom (La lope, Gabon domestic)  
 32 LPfor (La lope, Gabon forest)  
 
-* **Urbano genomes: 88 genomes and 3 populations**
-
-10 BZV (Brazzaville, Congo)  
-36 DLA (Douala, Cameroon)  
-42 LBV (Libreville, Gabon)  
-
 ****
+\newpage
 
 # 2. Dataset creation: reads mapping, SNP calling and filtering
 
@@ -41,8 +36,7 @@ GNcol (4), GQgam (9), GHgam (12), FRgam (24), GNgam (40), KE (48), GHcol (55), G
 
 * FASTQC report:
 
--> Wilding fastqc report: not available because we've got mapped reads.  
--> Urbano fastqc report: [fastqc report git hub link](https://github.com/jdaron/wilding/blob/master/fastqBamInfo/fastqInfo/anophele_coluzzi.urbano.multiqc_report.html "urbano_fastqc_report"). 
+-> Wilding fastqc report: *not available because we've got mapped reads.*  
 
 * cutadapt:
 ```{r cutadapt, eval=FALSE}
@@ -79,32 +73,30 @@ es/fastqBamInfo/bamInfo/jesus_qualimap/$inputFile.outqualimap -nt 2 -outformat H
 ```
 
 -> wilding bam report:
-[qualimap report git hub link](https://github.com/jdaron/wilding/blob/master/fastqBamInfo/bamInfo/wilding.qualimap.bam_report.pdf "wilding_qualimap_report").
+[$\color{blue}{\text{qualimap report git hub link}}$](https://github.com/jdaron/wilding/blob/master/fastqBamInfo/bamInfo/wilding.qualimap.bam_report.pdf "wilding_qualimap_report").
 
--> urbano bam report: [qualimap report git hub link](https://github.com/jdaron/wilding/blob/master/fastqBamInfo/bamInfo/urbano.report.qualimap.multi-bamqc.pdf "jesus_qualimap_report").
+\newpage
 
 ### 2.1.2 Bam files analysis (genome depth, sex determination)
 
 * Genome mean coverage:
 
 \begin{center}
-\includegraphics[width=8in]{/home/daron/bioInf/wilding/github/wilding/fastqBamInfo/bamInfo/wilding_urbano_mean_coverage.pdf}
+\includegraphics[width=8in]{/home/daron/bioInf/wilding/github/wilding/fastqBamInfo/bamInfo/wilding.mean_coverage.pdf}
 \end{center}
 
 **--> Filtering individuals: Remove individuals with mean coverage lower than 14x**  
   
 9 individuals from Wilding: LP69, LP243, LP697, LP1118, LP1125, LP1164, LP1165, LP1168, LP1285  
   
-17 individuals from Urbano: DLA037p, DLA076p, DLA077p, DLA102p, DLA105p, DLA130p, DLA132p, DLA155Bp, LBV001p, LBV007p, LBV009p, LBV052p, LBV125p, LBV127p, LBV137p, LBV140p, LBV142p  
-
 * Determining sex of each samples:
 
 \begin{center}
-\includegraphics[width=8in]{/home/daron/bioInf/wilding/github/wilding/fastqBamInfo/bamInfo/wilding_urbano.chr_coverageDepth.pdf}
+\includegraphics[width=8in]{/home/daron/bioInf/wilding/github/wilding/fastqBamInfo/bamInfo/wilding.chr_coverageDepth.pdf}
 \end{center}
 
-wilding: 16/96 Males
-urbano: 36/88 Males
+**Result:**  
+- wilding: 16/96 Males  
 
 ## 2.2 SNPs calling and filtering
 
@@ -121,36 +113,26 @@ rose.$out.unifiedGenotyper.vcf
 
 ### 2.2.2 SNP filtering:
 
-* Jupyter-notebook script to generate html report on the newly created VCF file: [Jupyter notebook VCF stat report code](https://github.com/jdaron/wilding/blob/main/snpCalling/vcfStats_slurm.ipynb). 
+* Jupyter-notebook script to generate html report on the newly created VCF file: [$\color{blue}{\text{Jupyter notebook VCF stat report code}}$](https://github.com/jdaron/wilding/blob/main/snpCalling/vcfStats_slurm.ipynb). 
 
 ```{r vcf_stat, eval=FALSE}
 launch_ipynb.py -i vcfStats_slurm.ipynb -o wilding.chr3R.vcfStats_slurm.html
 ```
 
--> Wilding samples only SNPs stat report: [Wilding SNP stat report](https://github.com/jdaron/wilding/tree/main/snpCalling/wilding "Wilding SNP stat report").
+-> Wilding samples only SNPs stat report: [$\color{blue}{\text{Wilding SNP stat report}}$](https://github.com/jdaron/wilding/tree/main/snpCalling/wilding "Wilding SNP stat report").
 
-Final number of SNPs per chr:  
-2L 1,228,916  
-2R 1,605,477  
-3L 1,159,765  
-3R 1,610,164  
-X 295,618  
+```{r echo=FALSE, results='asis'}
+df = data.frame(
+  chr = c("2L", "2R", "3L", "3R", "X"),
+  NbSNP = c(1228916, 1605477, 1159765, 1610164, 295618)
+)
+knitr::kable(df, caption = "Final number of SNPs per chr after filtration")
 
-9 inds removed because imiss > 10%: LP1120 LP1134 LP1283 LP255 LP51 LP53 LP65 LP934 LP937
+```
 
--> Wilding and Urbano samples SNPs stat report: [Wilding & Urbano SNP stat report](https://github.com/jdaron/wilding/tree/main/snpCalling/wilding_urbano "Wilding & Urbano SNP stat report").
+- 9 inds removed because imiss > 10%: LP1120 LP1134 LP1283 LP255 LP51 LP53 LP65 LP934 LP937
 
-Final number of SNPs per chr  
-2L 2,723,196  
-2R 3,485,073  
-3L 2,540,839  
-3R 3,524,803  
-X 639,905  
-
-4 inds removed because imiss > 10%: LP1124 LP1145 LP47 LP63  
-/!\ for X chr 10 samples are removed: BZV093bu DLA136u DLA137u LBV066u LBV072u LBV131u LP1124w LP1145w LP47w LP63w  
-
-* Bash script to perform SNP and ind filtering (cause scikit is only outputing stats)
+* Bash script to perform SNP and ind filtering (because scikit-allel is only outputing stats and cannot create a VCF or zarr file)
 ```{r filter_SNP_ind, eval=FALSE}
 #!/bin/bash
 
@@ -197,14 +179,15 @@ rm $IN_PREFIX.snpPassQC.vcf.gz
 
 ```
 
-***  
 * Summary of filtering step:
 1. Remove individual with mean coverage lower than 14x
 2. Discard SNPs present in none accessible area (defined in ag1000g), QD < 5.00, FS > 60.000 and ReadPosRankSum < -8.000
 3. Replace by NA genotypes with low call confidence (GQ<20)
 4. Remove SNPs with >5% lmiss
 5. Remove Inds with >10% imiss  
+
 ***
+\newpage
 
 # 3. Structure of genetic variation
 
@@ -244,12 +227,9 @@ plink --vcf wilding_urbano.3.pruned.vcf.gz --allow-extra-chr --genome --out wild
 \includegraphics[width=8in]{/home/daron/bioInf/wilding/github/wilding/popstructure/ibd_plink/wilding.ibd.pdf}
 \end{center}
 
-3. Wilding & Urbano
-\begin{center}
-\includegraphics[width=8in]{/home/daron/bioInf/wilding/github/wilding/popstructure/ibd_plink/wilding_urbano.ibd.pdf}
-\end{center}
-
 - Conclusion: Most sample pairs have low IBD value, meaning they are not related.
+
+\newpage
 
 ### PCA
 
@@ -257,14 +237,19 @@ plink --vcf wilding_urbano.3.pruned.vcf.gz --allow-extra-chr --genome --out wild
 # PCA analysis was made using the jupyter-notebook script pca.ipynb
 ```
 
-_Question: How does the genetics variation of wilding/urbano samples is structured alone, or within the AG1000G samples?_
+_Question: How does the genetics variation of wilding samples is structured alone, or within the AG1000G samples?_
 
-1. AG1000G and Wilding
+1. Wilding within AG1000G 
 \begin{center}
 \includegraphics[width=8in]{/home/daron/bioInf/wilding/github/wilding/popstructure/pca/ag1000g_phase2.wilding.merged.biallelic.3.pca.pdf}
 \end{center}
 
-2. Wilding
+2. Wilding within AG1000G colluzzi 
+\begin{center}
+\includegraphics[width=8in]{/home/daron/bioInf/wilding/github/wilding/popstructure/pca/ag1000g_phase2_col.wilding.merged.biallelic.3.pca.pdf}
+\end{center}
+
+3. Wilding
 \begin{center}
 \includegraphics[width=8in]{/home/daron/bioInf/wilding/github/wilding/popstructure/pca/wilding.biallelic.3.pca.pdf}
 \end{center}
@@ -323,7 +308,6 @@ option help:
 ```
 
 
-
 ### Stat descriptives
 
 * Pi and tajima D
@@ -337,6 +321,7 @@ popStatsDescWindows.py --snp anopheles-rose.unifiedGenotyper.cov14x.passQC.zarr 
 \end{center}
 
 * LDdecay
+Here is the link to the jupyter-notebook script: [$\color{blue}{\text{LdDecay}}$](https://github.com/jdaron/wilding/blob/main/popstructure/statDesc/ldDecay/ldDecay.ipynb "").
 
 ```{r lddecay, eval=FALSE}
 ldDecay.ipynb
@@ -409,9 +394,7 @@ IBDne was run with 3 samples size:
 
 ### Stairway plot
 
-a. SNP polarization
-In order to generate a unfolded site frequency spetrum we need to polarize the SNPs using an outgroup.  
-Here we used A. merus as outgroup with N=10 individuals.
+SNP polarization: In order to generate a unfolded site frequency spetrum we need to polarize the SNPs using an outgroup. Here we used A. merus as outgroup with N=10 individuals.
 
 ```{r polarize, eval=FALSE}
 ### merge wilding VCF with merus VCF
@@ -433,17 +416,7 @@ sfs.py --zarr ag1000g.phase2.anopheles-rose.merged.biallelic.zarr --keep LPdom.i
 \includegraphics[width=8in]{/home/daron/bioInf/wilding/github/wilding/popstructure/usfs/wilding_ag1000.usfs.pdf}
 \end{center}
 
-b. Population differenciation using join usfs.
-
-```{r jsfs, eval=FALSE}
-sfs.py --zarr ag1000g.phase2.anopheles-rose.merged.biallelic.zarr --keep LPdom.ind --keep2 LPfor.ind --bed ag1000g.chr3pericentroRegion.bed -o LPdom_LPfor.jsfs
-```
-
-\begin{center}
-\includegraphics[width=8in]{/home/daron/bioInf/wilding/github/wilding/popstructure/popdifferenciation/jsfs/wilding.jsfs.pdf}
-\end{center}
-
-c. Stairway plot
+b. Stairway plot
 ```{r stairwayplot2, eval=FALSE}
 pop=${1}
 inputSFS=${2}
@@ -493,4 +466,28 @@ bash run.blueprint.sh
 \includegraphics[width=8in]{/home/daron/bioInf/wilding/github/wilding/popstructure/demo_history/stairwayplot2/wilding_ag1000g.plot.final.summary.pdf}
 \end{center}
 
-### MSMC
+## Population differenciation and gene flow inference
+
+a. Calculate the join site frequency spectrum (jsfs) of the three pair of pops.
+
+```{r jsfs, eval=FALSE}
+sfs.py --zarr ag1000g.phase2.anopheles-rose.merged.biallelic.zarr --keep LPdom.ind --keep2 LPfor.ind --bed ag1000g.chr3pericentroRegion.bed -o LPdom_LPfor.jsfs
+```
+
+\begin{center}
+\includegraphics[width=8in]{/home/daron/bioInf/wilding/github/wilding/popstructure/popdifferenciation/jsfs/wilding.jsfs.pdf}
+\end{center}
+
+b. Formaly test whether LPdom and LPfor are two separate population or form one single panmictic population
+
+Panmixia test has been done using a jupyter-notebook script available here : [Test panmixia](https://github.com/jdaron/wilding/blob/main/popstructure/popdifferenciation/dadi/test_panmixia/test_panmixia_among_2pop.pdf).
+
+\begin{center}
+\includegraphics[width=8in]{/home/daron/bioInf/wilding/github/wilding/popstructure/popdifferenciation/dadi/test_panmixia/LPdom_LPfor.model-data.comparison.pdf}
+\end{center}
+
+\begin{center}
+\includegraphics[width=8in]{/home/daron/bioInf/wilding/github/wilding/popstructure/popdifferenciation/dadi/test_panmixia/LPdom_LPfor.chi2Distri.pdf}
+\end{center}
+
+Results: - Chi2 value of obs-scrambled jsfs LPdom-LPfor falls within the null distribution (build from 1000 permutation of pop labels). H0 of no difference between the two pop is accepted.

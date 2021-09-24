@@ -7,7 +7,7 @@ infow$grp = "wilding"
 head(infow)
 infoj <- read.table("~/bioInf/wilding/ressources/jesus.samples.meta.txt", h=T, sep="\t")
 head(infoj)
-infoj$grp = "jesus"
+infoj$grp = "urbano"
 
 info = rbind(infow[,c("id", "population", "mean_coverage", "grp")], infoj[,c("id", "population", "mean_coverage", "grp")])
 
@@ -15,6 +15,7 @@ info = rbind(infow[,c("id", "population", "mean_coverage", "grp")], infoj[,c("id
 mat = info
 head(mat)
 mat$id = factor(mat$id, levels = mat$id[order(mat$mean_coverage)])
+mat = mat[which(mat$grp=="wilding"),]
 
 p1 = ggplot(mat, aes(x=id, y=mean_coverage, color=population, fill=population)) +
   geom_bar(stat = "identity") +
@@ -33,7 +34,7 @@ p1 = ggplot(mat, aes(x=id, y=mean_coverage, color=population, fill=population)) 
 
 p1
   
-pdf("~/bioInf/wilding/fastqBamInfo/bamInfo/wilding_jesus_mean_coverage.pdf", width = conv_unit(180, "mm", "inch"), height = conv_unit(80, "mm", "inch"), useDingbats=FALSE) # export PDF 7x9
+pdf("~/bioInf/wilding/fastqBamInfo/bamInfo/wilding_mean_coverage.pdf", width = conv_unit(180, "mm", "inch"), height = conv_unit(80, "mm", "inch"), useDingbats=FALSE) # export PDF 7x9
 grid.arrange(p1, ncol = 1, nrow = 1, top = "Genome mean coverage")
 dev.off()
 
@@ -41,15 +42,16 @@ dev.off()
 matw = read.table("~/bioInf/wilding/fastqBamInfo/bamInfo/wilding/wilding.coveragePerChr.tab", header=F, skip=0, sep="\t")
 colnames(matw) = c("id", "chr", "chr_size", "bp_map", "mean_cov", "md_cov")
 
-matj = read.table("~/bioInf/wilding/fastqBamInfo/bamInfo/jesus/jesus.coveragePerChr.tab", header=F, skip=0, sep="\t")
-colnames(matj) = c("id", "chr", "chr_size", "bp_map", "mean_cov", "md_cov")
-head(matj)
+matu = read.table("~/bioInf/wilding/fastqBamInfo/bamInfo/urbano/urbano.coveragePerChr.tab", header=F, skip=0, sep="\t")
+colnames(matu) = c("id", "chr", "chr_size", "bp_map", "mean_cov", "md_cov")
+head(matu)
 
-mat = rbind(matw, matj)
+mat = rbind(matw, matu)
 
 mat = merge(mat, info, by="id")
 mat = mat[-which(mat$chr=="Y_unplaced" | mat$chr=="Mt"),]
 head(mat)
+mat = mat[which(mat$grp=="wilding"),]
 
 p2 = ggplot(mat, aes(x=chr, y=log10(mean_cov/mean_coverage), color=population, fill=population)) +
   geom_jitter(width = 0.2) +
@@ -62,7 +64,7 @@ p2 = ggplot(mat, aes(x=chr, y=log10(mean_cov/mean_coverage), color=population, f
   
 p2
 
-pdf("~/bioInf/wilding/fastqBamInfo/bamInfo/wilding_jesus.chr_coverageDepth.pdf", width = conv_unit(180, "mm", "inch"), height = conv_unit(80, "mm", "inch"), useDingbats=FALSE) # export PDF 7x9
+pdf("~/bioInf/wilding/fastqBamInfo/bamInfo/wilding.chr_coverageDepth.pdf", width = conv_unit(180, "mm", "inch"), height = conv_unit(80, "mm", "inch"), useDingbats=FALSE) # export PDF 7x9
 grid.arrange(p2, ncol = 1, nrow = 1, top = "Coverage depth per Chr and per Samples")
 dev.off()
 

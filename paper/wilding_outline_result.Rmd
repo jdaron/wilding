@@ -307,7 +307,6 @@ option help:
 
 ```
 
-
 ### Stat descriptives
 
 * Pi and tajima D
@@ -421,8 +420,7 @@ b. Stairway plot
 pop=${1}
 inputSFS=${2}
 sfs=$(cat /data3/projects/plasmodium/anopheles/popstructure/statDesc/usfs/$inputSFS | cut -f 3 | sed '1d' | sed '$d' | sed '1d' | tr "\n" " ")
-nbseq=$(cat /data3/projects/plasmodium/anopheles/popstructure/statDesc/usfs/$inputSFS | cut -f 3 | sed '1d' | sed '$d' | sed '1d' | wc -l | awk
- '{print $1+1}')
+nbseq=$(cat /data3/projects/plasmodium/anopheles/popstructure/statDesc/usfs/$inputSFS | cut -f 3 | sed '1d' | sed '$d' | sed '1d' | wc -l | awk '{print $1+1}')
 nbSite=30484401
 nrand_1=$(( ($nbseq-2)/4 ))
 nrand_2=$(( ($nbseq-2)/2 ))

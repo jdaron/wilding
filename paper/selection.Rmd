@@ -1,0 +1,41 @@
+---
+title: "Selection temp"
+author: "Josquin Daron"
+date: "5 octobre 2021"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+# Selection analysis
+
+```{r 1Pop, eval=FALSE}
+popStatsDescWindows.py --snp wilding.unifiedGenotyper.cov14x.passQC.phased.zarr/ -b bed  -o LBVwil --keep LBVwil.ind -a accessibility.h5 -wt snp -w 500
+popStatsDescWindows.py --snp wilding.unifiedGenotyper.cov14x.passQC.phased.zarr/ -b bed  -o LPdom --keep LPdom.ind -a ag1000g/accessibility.h5 -wt snp -w 500
+popStatsDescWindows.py --snp wilding.unifiedGenotyper.cov14x.passQC.phased.zarr/ -b bed  -o LPfor --keep LPfor.ind -a ag1000g/accessibility.h5 -wt snp -w 500
+```
+
+```{r 2Pop, eval=FALSE}
+fst_scan.py --zarr wilding.unifiedGenotyper.cov14x.passQC.phased.zarr/ --pop1 LPdom.ind --pop2 LPfor.ind -o LPdom_LPfor -w 500
+fst_scan.py --zarr wilding.unifiedGenotyper.cov14x.passQC.phased.zarr/ --pop1 LPdom.ind --pop2 LBVwil.ind -o LPdom_LBVwil -w 500
+fst_scan.py --zarr wilding.unifiedGenotyper.cov14x.passQC.phased.zarr/ --pop1 LPfor.ind --pop2 LBVwil.ind -o LPfor_LBVwil -w 500
+```
+
+
+```{r 3Pop, eval=FALSE}
+getPBS_scan.py --pop1 LPdom.ind --pop2 LPfor.ind --pop3 LBVwil.ind --zarr wilding.unifiedGenotyper.cov14x.passQC.phased.zarr/ -o LPdom_LPfor_LBVwil -w 500
+getPBS_scan.py --pop1 LBVwil.ind --pop2 LPdom.ind --pop3 LPfor.ind --zarr wilding.unifiedGenotyper.cov14x.passQC.phased.zarr/ -o LBVwil_LPdom_LPfor -w 500
+getPBS_scan.py --pop1 LBVwil.ind --pop2 LPfor.ind --pop3 LPdom.ind --zarr wilding.unifiedGenotyper.cov14x.passQC.phased.zarr/ -o LBVwil_LPfor_LPdom -w 500
+```
+
+\begin{center}
+\includegraphics[width=7in]{/home/daron/bioInf/wilding/github/wilding/selection/wilding.1pop.stats.pdf}
+\end{center}
+
+\begin{center}
+\includegraphics[width=7in]{/home/daron/bioInf/wilding/github/wilding/selection/wilding.2pop.stats.pdf}
+\end{center}
+
+\begin{center}
+\includegraphics[width=7in]{/home/daron/bioInf/wilding/github/wilding/selection/wilding.3pop.stats.pdf}
+\end{center}

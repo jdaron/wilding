@@ -251,6 +251,10 @@ _Question: How does the genetics variation of wilding/urbano samples is structur
 \includegraphics[width=8in]{/home/daron/bioInf/wilding/github/wilding/popstructure/pca/wilding_urbano_ag1000g.3.col.merge.pruned.pca.EV1234.pdf}
 \end{center}
 
+\begin{center}
+\includegraphics[width=8in]{/home/daron/bioInf/wilding/github/wilding/popstructure/pca/wilding_urbano_ag1000g.3.col.merge.pruned.pca.EV123.3D.pdf}
+\end{center}
+
 2. Wilding and Urbano
 \begin{center}
 \includegraphics[width=8in]{/home/daron/bioInf/wilding/github/wilding/popstructure/pca/wilding_urbano.3.pruned.pca.EV1234.pdf}

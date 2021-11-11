@@ -449,3 +449,18 @@ bash run.blueprint.sh
 \begin{center}
 \includegraphics[width=8in]{/home/daron/bioInf/wilding/github/wilding/popstructure/demo_history/stairwayplot2/wilding_urbano_ag1000g.plot.final.summary.pdf}
 \end{center}
+
+### Dadi
+
+\begin{center}
+\includegraphics[width=7in]{/home/daron/bioInf/wilding/popstructure/popdifferenciation/dadi/dadi_2D/model_likelihood.pdf}
+\end{center}
+
+AM2m Model
+\begin{center}
+\includegraphics[width=8in]{/home/daron/bioInf/wilding/popstructure/popdifferenciation/dadi/dadi_2D/wilding.3.LPdom_LBVdom_2021_9_24_151140/test_2021_9_24_151140_AM2m.pdf}
+\end{center}
+
+
+
+

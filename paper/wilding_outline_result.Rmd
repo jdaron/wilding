@@ -369,6 +369,23 @@ get_roh.py --snp ag1000g.phase2.anopheles-rose.merged.biallelic.zarr --keep LPdo
 \includegraphics[width=8in]{/home/daron/bioInf/wilding/github/wilding/popstructure/statDesc/roh/wilding_ag1000g.countroh_froh.pdf}
 \end{center}
 
+* doubleton sharing
+```{r doubleton, eval=FALSE}
+doubleton_sharing.py --meta wilding.meta --bed ag1000g.chr3pericentroRegion.bed -z wilding.unifiedGenotyper.cov14x.passQC.zarr/ -o wilding
+```
+
+\begin{center}
+\includegraphics[width=8in]{/home/daron/bioInf/wilding/github/wilding/popstructure/statDesc/doubleton_sharing/ag1000g.doubleton_sharing.pdf}
+\end{center}
+
+\begin{center}
+\includegraphics[width=8in]{/home/daron/bioInf/wilding/github/wilding/popstructure/statDesc/doubleton_sharing/wilding.doubleton_sharing.pdf}
+\end{center}
+
+\begin{center}
+\includegraphics[width=8in]{/home/daron/bioInf/wilding/github/wilding/popstructure/statDesc/doubleton_sharing/wilding_ag1000g.doubleton_sharing.pdf}
+\end{center}
+
 ## Deomgraphic history:
 Investigate recent changes in population size over time.
 
@@ -489,3 +506,83 @@ Panmixia test has been done using a jupyter-notebook script available here : [Te
 \end{center}
 
 Results: - Chi2 value of obs-scrambled jsfs LPdom-LPfor falls within the null distribution (build from 1000 permutation of pop labels). H0 of no difference between the two pop is accepted.
+
+### Dadi 2D
+
+Run 100 each of the 8model and plot AIC
+
+```{r dadi_2D, eval=FALSE}
+for i in {1..100}
+do
+	echo $i
+	script_inference_demo_new_models.py  -x LBVwil -y LPdom -o $outdir.${i} --fs_file_name anopheles-rose.3.unifiedGenotyper.cov14x.passQC.merge.pol.LPdom_LBVwil.fs --grid_points 50,60,70 --model_list $model
+done
+
+```
+
+\begin{center}
+\includegraphics[width=7in]{/home/daron/bioInf/wilding/github/wilding/popstructure/popdifferenciation/dadi/dadi_2D/wilding_3_LPdom_LBVdom.dadi2D8Model.aic.barplot.pdf}
+\end{center}
+
+SCG best model
+\begin{center}
+\includegraphics[width=8in]{/home/daron/bioInf/wilding/github/wilding/popstructure/popdifferenciation/dadi/dadi_2D/wilding.3.LPdom_LBVdom.SCG.45_2021_10_11_15654_SCG.pdf}
+\end{center}
+
+SCG draw best model
+\begin{center}
+\includegraphics[width=8in]{/home/daron/bioInf/wilding/github/wilding/popstructure/popdifferenciation/dadi/dadi_2D/fig_scgLPdom_LBVwil.pdf}
+\end{center}
+
+# 4. Selection
+```{r snpDensity, eval=FALSE}
+
+```
+
+\begin{center}
+\includegraphics[width=8in]{/home/daron/bioInf/wilding/github/wilding/selection/wilding.snpDensity.barplot.pdf}
+\end{center}
+
+\begin{center}
+\includegraphics[width=7in]{/home/daron/bioInf/wilding/github/wilding/selection/wilding.snpDensity.200kbw.pdf}
+\end{center}
+
+
+```{r 1Pop, eval=FALSE}
+popStatsDescWindows.py --snp wilding.unifiedGenotyper.cov14x.passQC.phased.zarr/ -b bed  -o LBVwil --keep LBVwil.ind -a accessibility.h5 -wt snp -w 500
+popStatsDescWindows.py --snp wilding.unifiedGenotyper.cov14x.passQC.phased.zarr/ -b bed  -o LPdom --keep LPdom.ind -a ag1000g/accessibility.h5 -wt snp -w 500
+popStatsDescWindows.py --snp wilding.unifiedGenotyper.cov14x.passQC.phased.zarr/ -b bed  -o LPfor --keep LPfor.ind -a ag1000g/accessibility.h5 -wt snp -w 500
+```
+
+```{r 2Pop, eval=FALSE}
+fst_scan.py --zarr wilding.unifiedGenotyper.cov14x.passQC.phased.zarr/ --pop1 LPdom.ind --pop2 LPfor.ind -o LPdom_LPfor -w 500
+fst_scan.py --zarr wilding.unifiedGenotyper.cov14x.passQC.phased.zarr/ --pop1 LPdom.ind --pop2 LBVwil.ind -o LPdom_LBVwil -w 500
+fst_scan.py --zarr wilding.unifiedGenotyper.cov14x.passQC.phased.zarr/ --pop1 LPfor.ind --pop2 LBVwil.ind -o LPfor_LBVwil -w 500
+```
+
+
+```{r 3Pop, eval=FALSE}
+getPBS_scan.py --pop1 LPdom.ind --pop2 LPfor.ind --pop3 LBVwil.ind --zarr wilding.unifiedGenotyper.cov14x.passQC.phased.zarr/ -o LPdom_LPfor_LBVwil -w 500
+getPBS_scan.py --pop1 LBVwil.ind --pop2 LPdom.ind --pop3 LPfor.ind --zarr wilding.unifiedGenotyper.cov14x.passQC.phased.zarr/ -o LBVwil_LPdom_LPfor -w 500
+getPBS_scan.py --pop1 LBVwil.ind --pop2 LPfor.ind --pop3 LPdom.ind --zarr wilding.unifiedGenotyper.cov14x.passQC.phased.zarr/ -o LBVwil_LPfor_LPdom -w 500
+```
+
+\begin{center}
+\includegraphics[width=7in]{/home/daron/bioInf/wilding/selection/wilding.1pop.stats.20kbw.pdf}
+\end{center}
+
+\begin{center}
+\includegraphics[width=7in]{/home/daron/bioInf/wilding/selection/wilding.2pop.stats.1000snp.pdf}
+\end{center}
+
+\begin{center}
+\includegraphics[width=7in]{/home/daron/bioInf/wilding/selection/wilding.pbs_scan.250snp.pdf}
+\end{center}
+
+### Haplotype clustering analysis
+
+![Vgsc](/home/daron/bioInf/wilding/selection/haplotype_analysis/Vgsc.png)
+![Tep1](/home/daron/bioInf/wilding/selection/haplotype_analysis/Tep1.png)
+![Gaba](/home/daron/bioInf/wilding/selection/haplotype_analysis/Gaba.png)
+![Cyp6p](/home/daron/bioInf/wilding/selection/haplotype_analysis/Cyp6p.png)
+![Gste](/home/daron/bioInf/wilding/selection/haplotype_analysis/Gste.png)

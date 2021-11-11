@@ -28,14 +28,48 @@ getPBS_scan.py --pop1 LBVwil.ind --pop2 LPdom.ind --pop3 LPfor.ind --zarr wildin
 getPBS_scan.py --pop1 LBVwil.ind --pop2 LPfor.ind --pop3 LPdom.ind --zarr wilding.unifiedGenotyper.cov14x.passQC.phased.zarr/ -o LBVwil_LPfor_LPdom -w 500
 ```
 
+#############
+### 1pop stat
+#############
+
+windows size = 20kb
 \begin{center}
-\includegraphics[width=7in]{/home/daron/bioInf/wilding/github/wilding/selection/wilding.1pop.stats.pdf}
+\includegraphics[width=7in]{/home/daron/bioInf/wilding/selection/wilding.1pop.stats.20kbw.pdf}
 \end{center}
 
+windows size = 1000snp
 \begin{center}
-\includegraphics[width=7in]{/home/daron/bioInf/wilding/github/wilding/selection/wilding.2pop.stats.pdf}
+\includegraphics[width=7in]{/home/daron/bioInf/wilding/selection/wilding.1pop.stats.1000snp.pdf}
 \end{center}
 
+#############
+### 2pop stat
+#############
+
+
+windows size = 1000snp
 \begin{center}
-\includegraphics[width=7in]{/home/daron/bioInf/wilding/github/wilding/selection/wilding.3pop.stats.pdf}
+\includegraphics[width=7in]{/home/daron/bioInf/wilding/selection/wilding.2pop.stats.1000snp.pdf}
+\end{center}
+
+windows size = 500snp
+\begin{center}
+\includegraphics[width=7in]{/home/daron/bioInf/wilding/selection/wilding.2pop.stats.500snp.pdf}
+\end{center}
+
+### PBS
+
+windows size = 1000snp
+\begin{center}
+\includegraphics[width=7in]{/home/daron/bioInf/wilding/selection/wilding.3pop.stats.1000snp.pdf}
+\end{center}
+
+windows size = 500snp
+\begin{center}
+\includegraphics[width=7in]{/home/daron/bioInf/wilding/selection/wilding.3pop.stats.500snp.pdf}
+\end{center}
+
+windows size = 250snp
+\begin{center}
+\includegraphics[width=7in]{/home/daron/bioInf/wilding/selection/wilding.3pop.stats.250snp.pdf}
 \end{center}

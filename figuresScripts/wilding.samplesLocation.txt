@@ -1,4 +1,0 @@
-nbsamples	pop	country	site_name	lat	lon	sp
-32	LBVwil	Gabon	Libreville	0.3901	9.4544	col
-32	Lpdom	Gabon	Lalope_village	-0.441165	11.524859	col
-32	Lpfor	Gabon	Lalope_forest	-0.441165	11.524859	col

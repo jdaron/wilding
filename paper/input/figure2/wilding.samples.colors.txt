@@ -1,0 +1,5 @@
+order	population	colors
+1	LBVwil	"#fcd116"
+2	LPdom	"#3a75c4"
+3	LPfor	"#009e60"
+

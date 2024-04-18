@@ -1,0 +1,8 @@
+1	AOcol
+2	LBVdom
+3	LPdom
+4	LPfor
+5	CIcol
+6	GHcol
+7	GNcol
+8	BFcol

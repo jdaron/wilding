@@ -1,0 +1,88 @@
+## Overall script and command line for population structure and demogrpahic analysis
+
+# Admixture analysis
+
+N=0
+for i in {1..10}; do
+	zcat $IN_PREFIX.vcf.gz | egrep -v "#" | cut -f 1,2 | shuf -n 100000 | sort -k 1n,1n -k 2n,2n > pos
+	vcftools --gzvcf $IN_PREFIX.vcf.gz --positions pos --stdout --recode | sed 's,^3L,1,' | sed 's,^3R,2,' | bgzip > samp.vcf.gz
+	tabix samp.vcf.gz
+	plink --vcf samp.vcf.gz --make-bed  --allow-extra-chr --out samp
+
+	for j in {1..10}; do
+		N=$(( $N + 1 ))
+		admixture --cv --seed=$RANDOM -j9 samp.bed $K | tee $IN_PREFIX.n$N.log${K}.out
+		mv samp.$K.P $IN_PREFIX.n$N.$K.P
+		mv samp.$K.Q $IN_PREFIX.n$N.$K.Q
+		scp $IN_PREFIX.n$N.$K.P $path_to_dir/
+		scp $IN_PREFIX.n$N.$K.Q $path_to_dir/
+		scp $IN_PREFIX.n$N.log${K}.out $path_to_dir/
+	done
+done
+
+# admixtureBayes
+python ~/bin/AdmixtureBayes/admixturebayes/runMCMC.py --input_file ag1000g_wilding.3.polarized.pruned.treemix --result_file out.chain --n 450000 --MCMC_chains 40 --outgroup Amerus
+
+# Pi and tajima's D
+egrep -w $pop wilding.samples.meta.txt | egrep pass | cut -f 1 > keep
+
+gscanIntraPop.py --snp wilding.unifiedGenotyper.cov14x.passQC.zarr -o $pop.wilding --keep keep --access accessibility.h5 --bed ag1000g.chr3pericentroRegion.bed
+
+# ROH
+get_roh.py --snp wilding.unifiedGenotyper.cov14x.passQC.zarr -o $pop.wilding --keep keep --bed ag1000g.chr3pericentroRegion.bed --access accessibility.h5
+
+# LD decay
+ldDecay.ipynb
+
+# SFS site frequency spetrum
+sfs.py -z wilding.unifiedGenotyper.cov14x.passQC.zarr -o $pop.wilding --keep keep --bed ag1000g.chr3pericentroRegion.bed
+
+# IDB identity by descent
+java -Xmx8g -jar ibdseq.r1206.jar gt=$pop.3L.vcf.gz out=$pop.ibdseq.3L
+java -Xmx8g -jar ibdseq.r1206.jar gt=$pop.3R.vcf.gz out=$pop.ibdseq.3R
+
+# Fst
+fst.ipynb
+
+# Dadi test for panmixia.
+
+test_panmixia_among_2pop.ipynb
+
+# Stairwayplot2
+
+echo "popid: $pop # id of the population (no white space)" > run.blueprint
+echo "nseq: $nbseq # number of sequences" >> run.blueprint
+echo "L: $nbSite # total number of observed nucleic sites, including polymorphic and monomorphic"  >> run.blueprint
+echo "whether_folded: false # whethr the SFS is folded (true or false)" >> run.blueprint
+echo "SFS: $sfs # snp frequency spectrum: number of singleton, number of doubleton, etc. (separated by white space)" >> run.blueprint
+echo "#smallest_size_of_SFS_bin_used_for_estimation: 1 # default is 1; to ignore singletons, uncomment this line and change this number to 2" >> run.blueprint
+echo "#largest_size_of_SFS_bin_used_for_estimation: 29 # default is n-1; to ignore singletons, uncomment this line and change this number to nseq-2" >> run.blueprint
+echo "nrand: $nrand_1	$nrand_2	$nrand_3	$nrand_4 # number of random break points for each try (separated by white space)" >> run.blueprint
+echo "project_dir: $pop # project directory" >> run.blueprint
+echo "stairway_plot_dir: /home/daron/bioInf/bin/stairway_plot_v2.1.1/stairway_plot_es # directory to the stairway plot files" >> run.blueprint
+echo "ninput: 200 # number of input files to be created for each estimation" >> run.blueprint
+echo "#random_seed: $RANDOM" >> run.blueprint
+echo "#output setting" >> run.blueprint
+echo "mu: 3.5e-9 # assumed mutation rate per site per generation" >> run.blueprint
+echo "year_per_generation: 0.09 # assumed generation time (in years)" >> run.blueprint
+echo "#plot setting" >> run.blueprint
+echo "plot_title: $pop.plot # title of the plot" >> run.blueprint
+echo "xrange: 0.1,10000 # Time (1k year) range; format: xmin,xmax; "0,0" for default" >> run.blueprint
+echo "yrange: 0,0 # Ne (1k individual) range; format: xmin,xmax; "0,0" for default" >> run.blueprint
+echo "xspacing: 2 # X axis spacing" >> run.blueprint
+echo "yspacing: 2 # Y axis spacing" >> run.blueprint
+echo "fontsize: 12 # Font size" >> run.blueprint
+
+java -cp /home/daron/bioInf/bin/stairway_plot_v2.1.1/stairway_plot_es Stairbuilder run.blueprint
+bash run.blueprint.sh
+
+# Dadi
+for i in {1..100}
+do
+	echo $i
+	script_inference_demo_new_models.py  -x LBVwil -y LPdom -o $outdir.${i} --fs_file_name ../anopheles-rose.3.unifiedGenotyper.cov14x.passQC.merge.pol.LPdom_LBVwil.fs --grid_points 50,60,70 --model_list $model
+done
+
+dadi_2D_bootstrap.ipynb
+
+

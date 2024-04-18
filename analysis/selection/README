@@ -1,0 +1,17 @@
+## Here are the command line used of the selection analysis
+
+# FST DXY
+gscan2popStatDesc.py
+
+# REHH
+egrep $pop1 wilding.samples.meta.txt  | egrep pass | cut -f 1 > k1
+egrep $pop2 wilding.samples.meta.txt  | egrep pass | cut -f 1 > k2
+
+
+vcftools --gzvcf $targetVCF --keep k1 --non-ref-ac 1 --max-alleles 2 --stdout --recode-INFO-all --recode | bgzip > $pop1.vcf.gz 
+vcftools --gzvcf $targetVCF --keep k2 --non-ref-ac 1 --max-alleles 2 --stdout --recode-INFO-all --recode | bgzip > $pop2.vcf.gz 
+
+R --vanilla --args $pop1.vcf.gz $pop2.vcf.gz $pop1 $pop2 $pop1.$pop2.$chr.gscann_rehh < gscan_xpehh_rsb.R
+
+# Diploshic
+

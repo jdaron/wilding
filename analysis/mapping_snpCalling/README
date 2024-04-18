@@ -1,0 +1,45 @@
+
+# command line use for reads trimming, mapping and SNP calling
+
+
+# Step1. cutadapt
+cutadapt -a AGATCGGAAGAGCACACGTCTGAA -A AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGTAGATCTCGGTGGTCGCCGTATCATT -q 30 -m 25 --max-n 0 -o $inputFile.R1.fastq.gz -p $inputFile.R2.fastq.gz ${inputFile}_1.fastq.gz ${inputFile}_2.fastq.gz
+
+# Step2. bwa mapping
+
+bwa mem -t 1 Anopheles_gambiae.AgamP4.dna.chr.fna $inputFile.R1.fastq.gz $inputFile.R2.fastq.gz -R $(echo "@RG\tID:$id\tSM:$id"_"$sm\tLB:$id"_"$sm\tPL:ILLUMINA") | samtools view -F 4 -b - | samtools sort - -o $inputFile.map.sort.bam
+
+# Step3. gatk IndelRealigner
+java -jar ~/bin/GenomeAnalysisTK-3.8-0-ge9d806836/GenomeAnalysisTK.jar -T RealignerTargetCreator -R Anopheles_gambiae.AgamP4.dna.chr.fna -I $inputFile.bam -o $inputFile.realignertargetcreator.intervals  
+
+java -Xmx8G -Djava.io.tmpdir=/tmp -jar ~/bin/GenomeAnalysisTK-3.8-0-ge9d806836/GenomeAnalysisTK.jar -T IndelRealigner -R Anopheles_gambiae.AgamP4.dna.chr.fna -targetIntervals $inputFile.realignertargetcreator.intervals -I $inputFile.bam -o $inputFile.indelrealigner.bam
+
+# Step3. gatk UnifiedGenotyper
+
+java -jar ~/bioInf/bin/GenomeAnalysisTK-3.8-0-ge9d806836/GenomeAnalysisTK.jar -T UnifiedGenotyper -R Anopheles_gambiae.AgamP4.dna.chr.fna -I bamFile.list -L $interval --genotyping_mode DISCOVERY --downsampling_type BY_SAMPLE -dcov 250 --output_mode EMIT_VARIANTS_ONLY --min_base_quality_score 17 --genotype_likelihoods_model BOTH --heterozygosity 0.01 --indel_heterozygosity 0.001 -stand_call_conf 30.0 -contamination 0.05 -o wilding.$out.unifiedGenotyper.vcf
+
+# Step4. get stat on SNP before filtering
+vcfStats.ipynb
+
+# Step5. SNP filtering
+
+java -jar ~/bioInf/bin/GenomeAnalysisTK-3.8-0-ge9d806836/GenomeAnalysisTK.jar -T SelectVariants -R $REF -V $IN_VCF -o $IN_PREFIX.snponly.vcf.gz -selectType SNP
+
+tabix $IN_PREFIX.snponly.vcf.gz
+
+java -jar ~/bioInf/bin/GenomeAnalysisTK-3.8-0-ge9d806836/GenomeAnalysisTK.jar -T VariantFiltration -R $REF -V $IN_PREFIX.snponly.vcf.gz -o $IN_PREFIX.annot.vcf.gz --filterExpression "QD < 5.00 || FS > 60.000 || ReadPosRankSum < -8.000 " --filterName LOW_QUAL
+
+zcat $IN_PREFIX.annot.vcf.gz | egrep -v "LOW_QUAL" | bgzip > $IN_PREFIX.passQC.vcf.gz
+
+zcat $AG_VCF_ACCESS | awk '{if($7=="PASS"){print $1"\t"$2}}' > $IN_PREFIX.pos
+
+vcftools --gzvcf $IN_PREFIX.passQC.vcf.gz --positions $IN_PREFIX.pos --minGQ 20 --non-ref-ac-any 1 --recode-INFO-all --recode --stdout | bgzip > $IN_PREFIX.snpPassQC.vcf.gz
+
+vcftools --gzvcf $IN_PREFIX.snpPassQC.vcf.gz --missing-site --stdout | awk '{if($6<0.05){print $0}}' | cut -f 1,2 > $IN_PREFIX.lmiss
+
+vcftools --gzvcf $IN_PREFIX.snpPassQC.vcf.gz --positions $IN_PREFIX.lmiss --remove $IND --non-ref-ac-any 1 --recode-INFO-all --recode --stdout | bgzip > $IN_PREFIX.passQC.vcf.gz
+
+
+# Step6. kinship analysis
+plink --vcf $inputFile.vcf.gz --allow-extra-chr --genome --out $inputFile.plink
+

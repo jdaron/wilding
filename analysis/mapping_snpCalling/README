@@ -43,3 +43,22 @@ vcftools --gzvcf $IN_PREFIX.snpPassQC.vcf.gz --positions $IN_PREFIX.lmiss --remo
 # Step6. kinship analysis
 plink --vcf $inputFile.vcf.gz --allow-extra-chr --genome --out $inputFile.plink
 
+# Step7. SNP phasing
+# only keep biallelic SNP and rename chr
+vcftools --gzvcf $inputFile.vcf.gz --min-alleles 2 --max-alleles 2 --recode --stdout | sed 's,^\([2|3]\)L\t\(.*\),\1\t\2,' | bgzip > $input_prefix.biallelic.vcf.gz
+
+# create hap and legend file
+zcat ag1000g.phase2.ar1.haplotypes.$chr.gz | cat -n | awk '{print $1" "$4" "$5" "$6}' | bgzip > ag1000g.phase2.ar1.legend.$chr.gz
+zcat ag1000g.phase2.ar1.haplotypes.$chr.gz | cut -d " " -f 6- | bgzip > ag1000g.phase2.ar1.hap.$chr.gz
+
+# find snp absent in ref set and exclude them
+shapeit.v2.904.3.10.0-693.11.6.el7.x86_64/bin/shapeit -check -V $input_prefix.biallelic.vcf.gz -M recombination_maps/Ag_${chr}.map --input-ref ag1000g.phase2.ar1.hap.$chr.gz ag1000g.phase2.ar1.legend.$chr.gz ag1000g.phase2.ar1.samples.$chr.gz --output-log log.$chr
+
+shapeit.v2.904.3.10.0-693.11.6.el7.x86_64/bin/shapeit -check -V $input_prefix.biallelic.vcf.gz -M recombination_maps/Ag_${chr}.map --input-ref ag1000g.phase2.ar1.hap.$chr.gz ag1000g.phase2.ar1.legend.$chr.gz ag1000g.phase2.ar1.samples.$chr.gz --exclude-snp log.$chr.snp.strand.exclude
+
+# Main run shapeit without --no-mcmc
+shapeit.v2.904.3.10.0-693.11.6.el7.x86_64/bin/shapeit -V $input_prefix.biallelic.vcf.gz -M recombination_maps/Ag_${chr}.map --input-ref ag1000g.phase2.ar1.hap.$chr.gz ag1000g.phase2.ar1.legend.$chr.gz ag1000g.phase2.ar1.samples.$chr.gz --exclude-snp log.$chr.snp.strand.exclude -O $input_prefix --output-log log -T 1 --effective-size 1000000
+
+# Convert back to phased vcf, containing only the phased sites that shapeit used
+shapeit.v2.904.3.10.0-693.11.6.el7.x86_64/bin/shapeit -convert --input-haps $input_prefix --output-vcf $input_prefix.phased.vcf --output-log convert
+

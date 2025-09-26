@@ -9,4 +9,7 @@ This repository encompasses a comprehensive collection of scripts and workflows 
 1. The folder 'analysis' include homemade bash and python scripts used throughout the project.
 2. The folder 'paper' include Rscript and input process dataset to generate figures.
 
-Contact to Josquin Daron (josquin.daron (at) gmail.com), Michael C. Fontaine (michael.fontaine (at) cnrs.fr), and Diego Ayala (diego.ayala (at) ird.fr) 
+Contact to:
+- Josquin Daron (josquin.daron (at) gmail.com),
+- Michael C. Fontaine (michael.fontaine (at) cnrs.fr), &
+- Diego Ayala (diego.ayala (at) ird.fr) 

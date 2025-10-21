@@ -72,7 +72,136 @@ areaAroundRGenes = data.frame(
 ((areaAroundRGenes$start+areaAroundRGenes$stop)/2)+1e6
 
 #######################
-### Figure 4A: gscan XPEHH
+### Figure 4A: H12
+#######################
+
+zz=gzfile('wilding.bySNP.20000w.2000s.statWindows.txt.gz','rt')
+mat_pop1=read.csv(zz,header=F,sep = "\t")
+colnames(mat_pop1) = c("chrom", "start", "stop", "n_bases", "counts", "pi", "theta_wat", "tajimaD", "inb_coef", "h1", "h12", "h123", "h1_2", "pop")
+mat_pop1 = mat_pop1[which(mat_pop1$counts>10),]
+head(mat_pop1)
+
+ggplot() +
+  geom_histogram(data=mat_pop1, aes(x=counts), binwidth = 10)
+
+mat_pop1$pos = (mat_pop1$stop+mat_pop1$start)/2
+mat_pop1 = mat_pop1[!is.na(mat_pop1$h12),] # remove NaN
+mat_pop1$chrom = factor(mat_pop1$chrom, levels = c("2R", "2L", "3R", "3L", "X"))
+head(mat_pop1)
+
+### keep only pos in euchro
+head(mat_pop1)
+mat_pop1.f = data.frame()
+for(line in 1:dim(euchrom)[1]){
+  sub = mat_pop1[which(mat_pop1$chrom==euchrom$chr[line] & mat_pop1$pos>euchrom$start[line] & mat_pop1$pos<euchrom$stop[line]),]
+  mat_pop1.f = rbind(mat_pop1.f, sub)
+}
+
+df = mat_pop1.f[,c("chrom", "pos", "pop", "h12")]
+
+# top 1% 
+thresholds <- df %>%
+  group_by(pop) %>%
+  summarise(threshold_top_1_percent = quantile(h12, probs = 0.99))
+
+# Join and annotate:
+df.annot <- df %>%
+  left_join(thresholds, by = "pop") %>%
+  mutate(
+    group = ifelse(h12 >= threshold_top_1_percent, "sig", "nosig")
+  )
+
+df.annot$label = paste0(df.annot$pop, df.annot$group)
+
+# colors
+group.colors = c("#fcd116", "#3a75c4", "#009e60", "#C4C0AB", "#AFB5BE", "#A8BAB3")
+#"#D2C486", "#92A5C0", "#7EB39E"
+names(group.colors) = c("LBVwilsig", "LPdomsig", "LPforsig", "LBVwilnosig", "LPdomnosig", "LPfornosig")
+
+cols = c("#fcd116", "#3a75c4", "#009e60")
+names(cols) = c("LBVwil", "LPdom", "LPfor")
+
+# plot
+ggplot() +
+  geom_hline(data=thresholds, aes(yintercept=threshold_top_1_percent), linetype="dotted") +
+  #  geom_vline(data=rgenes, aes(xintercept=start/1000000), linetype="dotted") +
+  geom_point(data=rgenes, aes(x=start/1000000, y=Inf), size=1.5, color="black", fill="black", shape=25) +
+  geom_text_repel(data=rgenes, aes(x=(start+100000)/1000000, y=Inf, label=name), size= 3) +
+  #  geom_rect(data=heterochrom, aes(xmin=start/1000000, xmax=stop/1000000, ymin=-Inf, ymax=Inf), alpha = 1, fill = 'grey') +
+  geom_point(data=df.annot, aes(x=pos/1000000, y=h12, color=label), size=0.25) +
+  #  geom_line(data=df.annot, aes(x=pos/1000000, y=h12, color=pop), size=0.5) +
+  scale_color_manual(values = group.colors) +
+  facet_grid(pop~chrom, scales="free_x") +
+  theme_classic() +
+  theme(
+    #    strip.text.x = element_blank(),
+    legend.position = "none",
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    strip.background = element_blank()
+  ) +
+  labs(y="Intra pop Values", x="Positions")
+
+#######################
+### Figure 4B: Fst
+#######################
+
+df = data.frame()
+for(cp in c("LBVwil_LPdom", "LBVwil_LPfor", "LPdom_LPfor")){
+  inf = paste0(cp,".fst_dxy.scan.txt")
+  mat = read.table(inf, h=T, fill = TRUE, dec = ".")
+  mat = mat[which(!is.na(mat$fst)),]
+  mat = mat[,c("chrom", "start", "end", "count", "fst")]
+  gr_mat <- GRanges(seqnames=mat$chrom, ranges=IRanges(start=mat$start, end=mat$end))
+  gr_eu  <- GRanges(seqnames=euchrom$chr, ranges=IRanges(start=euchrom$start+10000, end=euchrom$stop-10000))
+  hits <- findOverlaps(gr_mat, gr_eu, type="within")
+  mat.f <- mat[queryHits(hits), ]
+  mat.f$comp = cp
+  df = rbind(df, mat.f)
+}
+
+head(df)
+df$chrom = factor(df$chrom, levels = c("2R", "2L", "3R", "3L", "X"))
+
+# top 1% 
+thresholds <- df %>%
+  group_by(comp) %>%
+  summarise(threshold_top_1_percent = quantile(fst, probs = 0.99))
+
+# Join and annotate:
+df.annot <- df %>%
+  left_join(thresholds, by = "comp") %>%
+  mutate(
+    group = ifelse(fst >= threshold_top_1_percent, "sig", "nosig")
+  )
+
+df.annot$label = paste0(df.annot$comp, df.annot$group)
+unique(df.annot$label)
+
+# colors
+group.colors = brewer.pal(n=6, name="Paired")
+names(group.colors) = c("LBVwil_LPdomnosig", "LBVwil_LPdomsig", "LBVwil_LPfornosig", "LBVwil_LPforsig", "LPdom_LPfornosig", "LPdom_LPforsig")
+
+# dummy
+dummy <- data.frame(comp = c("LBVwil_LPdom", "LBVwil_LPfor", "LPdom_LPfor"), fst= c(0.8, 0.8, 0.2))
+
+ggplot() +
+  geom_blank(data=dummy, aes(y=fst)) +
+  geom_vline(data=rgenes, aes(xintercept=start/1000000), linetype="dotted") +
+  geom_point(data=df.annot, aes(x=(start+end)/2/1000000, y=fst, color=label, fill=label), size=0.25) +
+  facet_grid(comp~chrom, scale="free") +
+  theme_classic() +
+  theme(
+    legend.position = "none",
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    strip.background = element_blank()
+  ) +
+  scale_color_manual(values = group.colors) + 
+  scale_fill_manual(values = group.colors)
+
+#######################
+### Figure 4C: XP-EHH
 #######################
 
 ### load rehh by SNP
@@ -80,7 +209,7 @@ rehh_df = data.frame()
 for(p in c("LPdom.LBVwil", "LPfor.LBVwil", "LPdom.LPfor")){
   rehh_df_pop = data.frame()
   for(c in c("2L", "2R", "3L", "3R", "X")){
-    path = paste(p, ".", c, ".gscann_rehh_bySNP.txt.gz", sep = "")
+    path = paste("/Volumes/@IVI/Josquin_Daron/wilding/selection/interPop_stats/xpehh/", p, ".", c, ".gscann_rehh_bySNP.txt.gz", sep = "")
     zz=gzfile(path,'rt')
     mat=read.csv(zz,header=F,sep = "\t")
     head(mat)
@@ -105,7 +234,6 @@ for(p in c("LPdom.LBVwil", "LPfor.LBVwil", "LPdom.LPfor")){
   colnames(xpehh) = c("chrom", "pos", "value", "pvalue", "comp_pop")
   xpehh$stat= "xpehh"
   rehh_df_pop.f.m = rbind(rsb, xpehh)
-  
   ### pvalue transformation FDR and bonferonni
   rehh_df_pop.f.m$pvalue_back_trans = 10**(-rehh_df_pop.f.m$pvalue)  # transform back to p-values
   
@@ -127,14 +255,14 @@ for(p in c("LPdom.LBVwil", "LPfor.LBVwil", "LPdom.LPfor")){
   rehh_df_pop.f.m$colcat[which(rehh_df_pop.f.m$fdr<1e-4  & rehh_df_pop.f.m$value<0)] = (ntile(rehh_df_pop.f.m$pvalue[which(rehh_df_pop.f.m$fdr<1e-4 & rehh_df_pop.f.m$value<0)], 5)+5)*-1
   rehh_df_pop.f.m$colcat[which(rehh_df_pop.f.m$fdr<1e-4  & rehh_df_pop.f.m$value>=0)] = ntile(rehh_df_pop.f.m$pvalue[which(rehh_df_pop.f.m$fdr<1e-4 & rehh_df_pop.f.m$value>=0)], 5)+5
   rehh_df_pop.f.m$colcat = factor(rehh_df_pop.f.m$colcat)
-    
+  
   # discard a fraction of nosig SNP
-#  nb = length(which(rehh_df_pop.f.m$value > -3 & rehh_df_pop.f.m$value < 3 & rehh_df_pop.f.m$fdr>1e-4))
-#  nosig = rehh_df_pop.f.m[which(rehh_df_pop.f.m$value > -3 & rehh_df_pop.f.m$value < 3 & rehh_df_pop.f.m$fdr>1e-4)[seq(1, nb, 20)],]
-#  sig = rehh_df_pop.f.m[-which(rehh_df_pop.f.m$value > -3 & rehh_df_pop.f.m$value < 3 & rehh_df_pop.f.m$fdr>1e-4),]
-#  rehh.f = rbind(nosig, sig)
+  #  nb = length(which(rehh_df_pop.f.m$value > -3 & rehh_df_pop.f.m$value < 3 & rehh_df_pop.f.m$fdr>1e-4))
+  #  nosig = rehh_df_pop.f.m[which(rehh_df_pop.f.m$value > -3 & rehh_df_pop.f.m$value < 3 & rehh_df_pop.f.m$fdr>1e-4)[seq(1, nb, 20)],]
+  #  sig = rehh_df_pop.f.m[-which(rehh_df_pop.f.m$value > -3 & rehh_df_pop.f.m$value < 3 & rehh_df_pop.f.m$fdr>1e-4),]
+  #  rehh.f = rbind(nosig, sig)
   rehh.f = rehh_df_pop.f.m
-
+  
   rehh_df = rbind(rehh_df, rehh.f)
 }
 head(rehh_df)
@@ -148,87 +276,37 @@ gc()
 
 ### select only XPEHH value
 rehh_df_xpehh = rehh_df[which(rehh_df$stat=="xpehh"),]
+rehh_df_xpehh$chrom = factor(rehh_df_xpehh$chrom)
 
-# set up the y axis bounderies
-rehh_r = max(range(rehh_df_xpehh$value))
-
-dummy <- data.frame(
-  chrom= rep(levels(rehh_df_xpehh$chrom), each=2),
-  stat= c(rep("xpehh",5)),
-  min = c(rep(-1*rehh_r[1],5)),
-  max = c(rep(rehh_r[1],5))
-)
-
-dummy
-dummy.m = melt(data=dummy, id.vars = c("chrom", "stat"), measure.vars = c("min", "max"))
-dummy.m$pos = 1
-
-### set colors
-colfunc = colorRampPalette(c("gray", "royalblue4"))
-colnosigneg = colfunc(10)[1:5]
-names(colnosigneg) = seq(-1,-5)
-
-colfunc = colorRampPalette(c("gray", "red4"))
-colnosigpos = colfunc(10)[1:5]
-names(colnosigpos) = seq(1,5)
-plot(rep(1,10),col=colfunc(10),  pch=19,cex=2)
-
-colfunc = colorRampPalette(c("mediumblue", "mediumblue"))
-colsigneg = colfunc(5)
-names(colsigneg) = seq(-6,-10)
-
-colfunc = colorRampPalette(c("red", "red"))
-colsigpos = colfunc(5)
-names(colsigpos) = seq(6,10)
-
-group.colors = c(colnosigneg, colnosigpos, colsigneg, colsigpos)
-
-### plot
+##### plot pvalue
 dat_text = rgenes
 dat_text$stat = "xpehh"
 
+head(rehh_df_xpehh)
+
+rehh_df_xpehh <- rehh_df_xpehh[order(rehh_df_xpehh$chrom, rehh_df_xpehh$pos), ]
 sig = rehh_df_xpehh[which(rehh_df_xpehh$fdr<1e-4),]
 nosig = rehh_df_xpehh[which(rehh_df_xpehh$fdr>=1e-4),]
+range(nosig$fdr)
+
+dim(nosig)
+
+sub <- bind_rows(
+  nosig %>% filter(fdr < 0.05),
+  nosig %>%
+    filter(fdr >= 0.05) %>%
+    slice(seq(1, n(), by = 200))
+) %>%
+  arrange(chrom, pos)  # optional, for ordered plotting
+
+nosig = sub 
+dim(nosig)
+
 sig$comp_pop = factor(sig$comp_pop, levels = c("LPdom_LBVwil", "LPfor_LBVwil", "LPdom_LPfor"))
+nosig$comp_pop = factor(nosig$comp_pop, levels = c("LPdom_LBVwil", "LPfor_LBVwil", "LPdom_LPfor"))
+sig$chrom = factor(sig$chrom, levels = c("2R", "2L", "3R", "3L", "X"))
 nosig$chrom = factor(nosig$chrom, levels = c("2R", "2L", "3R", "3L", "X"))
 
-plot = ggplot() +
-#  geom_rect(data=heterochrom, aes(xmin=start/1000000, xmax=stop/1000000, ymin=-0.1, ymax=0.1), alpha = 1, fill = 'black') +
-#  geom_rect(data=areaAroundRGenes, aes(xmin=start/1000000, xmax=stop/1000000, ymin=-Inf, ymax=Inf), alpha = 1, fill = 'gray') +
-  geom_point(data=nosig, aes(x=pos/1000000, y=value, color=colcat, fill=colcat), size=0.2) +
-  geom_point(data=sig, aes(x=pos/1000000, y=value, color=colcat, fill=colcat), size=0.5) +
-  #  geom_vline(data=rgenes, aes(xintercept=start/1000000), linetype="dotted") +
-#  geom_point(data=dat_text, aes(x=start/1000000, y=Inf), size=1.5, color="black", fill="black", shape=25) +
-#  geom_text_repel(data=dat_text, aes(x=(start+100000)/1000000, y=Inf, label=name), size= 3) +
-  geom_blank(data=dummy.m, aes(x=pos, y=value)) +
-  facet_grid(comp_pop~chrom, scales="free") +
-  scale_color_manual(values=group.colors) +
-  scale_fill_manual(values=group.colors) +
-  theme_void() +
-  theme(
-    legend.position = "none",
-    strip.text = element_blank())
-
-plot
-
-gt = ggplot_gtable(ggplot_build(plot))
-gt$widths[5] = gt$widths[5]*chromSize$proportion[which(chromSize$chr=="2R")]
-gt$widths[7] = gt$widths[7]*chromSize$proportion[which(chromSize$chr=="2L")]
-gt$widths[9] = gt$widths[9]*chromSize$proportion[which(chromSize$chr=="3R")]
-gt$widths[11] = gt$widths[11]*chromSize$proportion[which(chromSize$chr=="3L")]
-gt$widths[13] = gt$widths[13]*chromSize$proportion[which(chromSize$chr=="X")]
-
-png("wilding.rehhMaxGap20kb.xpehh.png", width = 900, height = 500) # export PDF 7x9
-y = arrangeGrob(gt)
-grid.draw(y)
-dev.off()
-
-tiff("wilding.rehhMaxGap20kb.xpehh.tiff", width = 3600, height = 2000, res = 300, compression = 'lzw')
-y = arrangeGrob(gt)
-grid.draw(y)
-dev.off()
-
-##### plot pvalue
 # transform colors
 dim(nosig)
 nosig$cols = "nosig"
@@ -254,8 +332,9 @@ dummy <- data.frame(
   min = c(rep(0,5)),
   max = c(rep(max(-1*log10(sig$fdr)),5))
 )
-dummy.m = melt(data=dummy, id.vars = c("chrom", "stat"), measure.vars = c("min", "max"))
+dummy.m = reshape2::melt(data=dummy, id.vars = c("chrom", "stat"), measure.vars = c("min", "max"))
 dummy.m$pos = 1
+dummy.m$chrom = factor(dummy.m$chrom, levels = c("2R", "2L", "3R", "3L", "X"))
 
 th = theme(
   panel.grid.major = element_blank(),
@@ -265,38 +344,15 @@ th = theme(
 
 plot = ggplot() +
   geom_point(data=nosig, aes(x=pos/1000000, y=-1*log10(fdr), color=cols, fill=cols), size=0.2) +
-  geom_point(data=sig, aes(x=pos/1000000, y=-1*log10(fdr), color=cols, fill=cols), size=0.5) +
+  geom_point(data=sig, aes(x=pos/1000000, y=-1*log10(fdr), color=cols, fill=cols), size=0.2) +
   geom_blank(data=dummy.m, aes(x=pos, y=value)) +
   facet_grid(comp_pop~chrom, scales="free") +
   scale_color_manual(values=group.colors) +
   scale_fill_manual(values=group.colors) +
   theme_classic() + th +
-#  theme_void() +
   theme(
-    legend.position = "none", 
-    strip.text = element_blank())
+    legend.position = "none")
 
-gt = ggplot_gtable(ggplot_build(plot))
-gt$widths[5] = gt$widths[5]*chromSize$proportion[which(chromSize$chr=="2R")]
-gt$widths[7] = gt$widths[7]*chromSize$proportion[which(chromSize$chr=="2L")]
-gt$widths[9] = gt$widths[9]*chromSize$proportion[which(chromSize$chr=="3R")]
-gt$widths[11] = gt$widths[11]*chromSize$proportion[which(chromSize$chr=="3L")]
-gt$widths[13] = gt$widths[13]*chromSize$proportion[which(chromSize$chr=="X")]
-
-png("wilding.rehhMaxGap20kb.xpehhPvalue.png", width = 900, height = 500) # export PDF 7x9
-y = arrangeGrob(gt)
-grid.draw(y)
-dev.off()
-
-tiff("wilding.rehhMaxGap20kb.xpehhPvalue.tiff", width = 3600, height = 2000, res = 300, compression = 'lzw')
-y = arrangeGrob(gt)
-grid.draw(y)
-dev.off()
-
-pdf("gscan_xpehh.wilding.pdf", width = conv_unit(190, "mm", "inch"), height = conv_unit(100, "mm", "inch"), useDingbats=FALSE) # export PDF 7x9
-y = arrangeGrob(gt, ncol = 1)
-grid.draw(y)
-dev.off()
 
 #######################
 ### Supplemntary Figure 11: proportion on gscan rehh
